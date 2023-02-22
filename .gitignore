@@ -1,0 +1,15 @@
+target/
+traces/
+
+.idea
+*.iws
+*.iml
+*.ipr
+
+/mvmw
+/mvnw.cmd
+/.mvn/
+/.idea/
+.DS.Store
+/.ideaDataSources/
+/dataSources/
