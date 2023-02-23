@@ -13,11 +13,13 @@
 
     <groupId>com.scraper</groupId>
     <artifactId>reviews-scraper-service-parent</artifactId>
-    <packaging>pom</packaging>
     <version>1.0.0-SNAPSHOT</version>
+    <name>reviews-scraper-service-parent</name>
+    <description>Reviews scraper service</description>
+    <packaging>pom</packaging>
     <modules>
-        <module>review-scraper-service-application</module>
         <module>review-scraper-service-persistence</module>
+        <module>review-scraper-service-application</module>
     </modules>
 
     <properties>
@@ -56,7 +58,6 @@
             <artifactId>opentracing-spring-web-starter</artifactId>
             <version>4.1.0</version>
         </dependency>
-
         <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
@@ -68,5 +69,19 @@
             <version>${jsoup.version}</version>
         </dependency>
     </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.10.1</version>
+                <configuration>
+                    <source>${maven.compiler.source}</source>
+                    <target>${maven.compiler.source}</target>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
 
 </project>
