@@ -1,5 +1,6 @@
 package com.scraper.integration.emag.service;
 
+import com.scraper.integration.dto.ExternalReviewsDTO;
 import com.scraper.integration.emag.dto.list.ExternalReviewsData;
 import com.scraper.integration.emag.dto.model.ExternalReviewerBuilder;
 import com.scraper.integration.emag.dto.model.OriginalReviewBuilder;
@@ -24,23 +25,15 @@ public class ReviewScraperService {
 
     private final EmagService emagService;
     private final OriginalReviewDao originalReviewDao;
-    public ResponseEntity<ExternalReviewsData> scrapeProductReviews(String productPage) {
-        if (!productPage.contains("/pd/")) {
-            log.error("No product with that name");
-        }
-        var partId = productPage.split("/pd/")[1].split("/")[0];
-
-        var productDto = convertToProductDto(productPage);
-        var reviews = emagService.getExternalReviewData(productDto);
-        getReviewsAndSave(reviews, partId);
-
-        return null;
+    public ResponseEntity<ExternalReviewsDTO> scrapeProductReviews(String pdId, String productName) {
+        var reviews = emagService.getExternalReviewData(pdId, productName);
+        return ResponseEntity.ok(getReviewsAndSave(reviews, pdId));
     }
 
-    private void getReviewsAndSave(List<ExternalReviewsData> originalReviews, String partId) {
+    private ExternalReviewsDTO getReviewsAndSave(ExternalReviewsData originalReviews, String partId) {
         // TODO: get first review
 
-        originalReviews.forEach(externalReviewsData -> externalReviewsData.getExternalProductReviewsData().getItems().stream()
+        originalReviews.getExternalProductReviewsData().getItems().stream()
                 .map(s -> OriginalReviewBuilder.builder()
                         .partId(partId)
                         .reviewExternalId(s.id)
@@ -68,6 +61,8 @@ public class ReviewScraperService {
                                 .collect(Collectors.toSet()))
                         .build())
                 .toList()
-                .forEach(originalReviewsBuilder -> originalReviewDao.save(originalReviewsBuilder.toInternal())));
+                .forEach(originalReviewsBuilder -> originalReviewDao.save(originalReviewsBuilder.toInternal()));
+
+        return new ExternalReviewsDTO(originalReviews.getExternalProductReviewsData().getItems().size());
     }
 }

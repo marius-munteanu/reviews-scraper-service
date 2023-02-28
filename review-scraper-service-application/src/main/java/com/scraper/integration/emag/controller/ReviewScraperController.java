@@ -1,5 +1,6 @@
 package com.scraper.integration.emag.controller;
 
+import com.scraper.integration.dto.ExternalReviewsDTO;
 import com.scraper.integration.emag.dto.list.ExternalReviewsData;
 import com.scraper.integration.emag.service.ReviewScraperService;
 import lombok.RequiredArgsConstructor;
@@ -17,10 +18,11 @@ public class ReviewScraperController {
 
     @GetMapping(path = "/scrape")
     @ResponseStatus(CREATED)
-    public ResponseEntity<ExternalReviewsData> analyseReviews(
-            @RequestParam(value="productPage") String productPage) {
+    public ResponseEntity<ExternalReviewsDTO> analyseReviews(
+            @RequestParam(value="pdId") String pdId,
+            @RequestParam(value="productName") String productName) {
 
-        return reviewScraperService.scrapeProductReviews(productPage);
+        return reviewScraperService.scrapeProductReviews(pdId, productName);
     }
 
     @GetMapping("/test")

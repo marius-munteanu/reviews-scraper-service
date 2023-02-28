@@ -28,7 +28,7 @@ public class EmagService extends ExternalService {
         super(restTemplate, emagEndpoint);
     }
 
-    public List<ExternalReviewsData> getExternalReviewData(ProductDto productDto) {
+    public ExternalReviewsData getExternalReviewData(String pdId, String productName) {
         HttpHeaders headers = new HttpHeaders();
         headers.setAccept(Collections.singletonList(MediaType.APPLICATION_JSON));
         headers.add("user   -agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/108.0.0.0 Safari/537.36Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/108.0.0.0 Safari/537.36");
@@ -36,9 +36,9 @@ public class EmagService extends ExternalService {
         final var httpEntity = new HttpEntity<>(null, headers);
         List<ExternalReviewsData> externalReviewsDataList = new ArrayList<>();
 
-        var s = getReviewData(httpEntity, productDto.getProductName(), productDto.getPdId(), 0, 10, externalReviewsDataList);
+        var s = getReviewData(httpEntity, productName, pdId, 0, 10, externalReviewsDataList);
 
-        return externalReviewsDataList;
+        return externalReviewsDataList.get(0);
     }
 
     private List<ExternalReviewsData> getReviewData(HttpEntity httpEntity, String productName, String pdId, int offset, int limit, List<ExternalReviewsData> externalReviewsDataList) {
