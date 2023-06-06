@@ -17,6 +17,9 @@
             <column name="review" type="TEXT">
                 <constraints nullable="false"/>
             </column>
+            <column name="rating" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
             <column name="title" type="TEXT">
                 <constraints nullable="false"/>
             </column>

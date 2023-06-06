@@ -31,6 +31,9 @@ public class OriginalReview {
     @Column(name = "review", length = 2048)
     private String review;
 
+    @Column(name = "rating")
+    private int rating;
+
     @Column(name = "title", length = 2048)
     private String title;
 

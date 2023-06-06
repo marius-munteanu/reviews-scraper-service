@@ -14,6 +14,7 @@ public class OriginalReviewDto {
 
     private String title;
     private String content;
+    private int rating;
     private long reviewId;
     private int numberOfVotes;
     private boolean isVerifiedPurchase;

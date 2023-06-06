@@ -42,9 +42,15 @@ public class ReviewScraperService {
         var reviews = originalReviewsDto.getOriginalReviewDtos().stream()
                 .map(review -> createOriginalReviewEntry(review, originalReviewsDto.getPdId())).toList();
 
-        originalReviewDao.saveAll(reviews);
+        var listReviews = originalReviewDao.saveAll(reviews);
+        var originalRating = listReviews.stream()
+                .mapToInt(OriginalReview::getRating)
+                .average()
+                .orElse(0.0);
 
-        return new ExternalReviewsDTO(originalReviewsDto.getPdId(), originalReviewsDto.getNumberOfReviews());
+        var revisedRating = 0.0;
+
+        return new ExternalReviewsDTO(originalRating, revisedRating, originalReviewsDto.getPdId(), originalReviewsDto.getNumberOfReviews());
     }
 
     private OriginalReview createOriginalReviewEntry(OriginalReviewDto review, String pdId) {
@@ -52,11 +58,11 @@ public class ReviewScraperService {
         originalReview.setReviewExternalId(review.getReviewId());
         originalReview.setPartId(pdId);
         originalReview.setReview(review.getContent());
+        originalReview.setRating(review.getRating());
         originalReview.setTitle(review.getTitle());
         originalReview.setLikes(review.getNumberOfVotes());
         originalReview.setVerifiedPurchase(review.isVerifiedPurchase());
         originalReview.setCreatedOn(review.getCreatedOn().toString());
-        originalReview.setUpdatedOn(review.getUpdatedOn().toString());
 
         return originalReview;
     }
@@ -65,6 +71,7 @@ public class ReviewScraperService {
         return OriginalReviewDto.builder()
                 .title(reviewItem.getTitle())
                 .content(reviewItem.getContent())
+                .rating(reviewItem.getRating())
                 .reviewId(reviewItem.getId())
                 .numberOfVotes(reviewItem.getVotes())
                 .createdOn(LocalDateTime.ofInstant(reviewItem.getCreated().toInstant(), ZoneId.systemDefault()))
