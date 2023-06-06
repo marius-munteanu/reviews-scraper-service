@@ -1,7 +1,5 @@
 package com.scraper.integration.emag.util;
 
-import com.scraper.integration.emag.dto.ProductDto;
-
 public class EmagUtil {
 
     public static final String FEEDBACK_REVIEWS_INDEX = "https://www.emag.ro/sitemaps/feedback-reviews-index.xml";
@@ -14,13 +12,5 @@ public class EmagUtil {
 
     public static String urlBuilder(String productName, String pdId, String reviewId) {
         return String.format(EMAG_REVIEW_URL, productName, pdId, reviewId);
-    }
-
-    public static ProductDto convertToProductDto(String product) {
-//        product = product.replace("https://www.emag.ro", "");
-        var splitString = product.split("/");
-        var productName = splitString[3];
-        var pdId = splitString[5];
-        return new ProductDto(productName, pdId);
     }
 }

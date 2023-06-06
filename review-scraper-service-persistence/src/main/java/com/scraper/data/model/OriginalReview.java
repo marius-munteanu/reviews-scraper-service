@@ -23,7 +23,7 @@ public class OriginalReview {
     private Long id;
 
     @Column(name = "review_external_id")
-    private int reviewExternalId;
+    private long reviewExternalId;
 
     @Column(name = "part_id")
     private String partId;

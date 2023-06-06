@@ -1,7 +1,10 @@
-package com.scraper.integration.emag.dto.list;
+package com.scraper.integration.emag.dto;
+
+import lombok.Data;
 
 import java.util.Date;
 
+@Data
 public class Comment{
     public int parent_id;
     public boolean is_official;

@@ -1,8 +1,8 @@
-package com.scraper.integration.emag.controller;
+package com.scraper.app.controller;
 
-import com.scraper.integration.dto.ExternalReviewsDTO;
-import com.scraper.integration.emag.dto.list.ExternalReviewsData;
-import com.scraper.integration.emag.service.ReviewScraperService;
+import com.scraper.app.dto.ExternalReviewsDTO;
+import com.scraper.integration.emag.dto.ExternalReviewsData;
+import com.scraper.app.service.ReviewScraperService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -18,7 +18,7 @@ public class ReviewScraperController {
 
     @GetMapping(path = "/scrape")
     @ResponseStatus(CREATED)
-    public ResponseEntity<ExternalReviewsDTO> analyseReviews(
+    public ResponseEntity<ExternalReviewsDTO> scrapeReviews(
             @RequestParam(value="pdId") String pdId,
             @RequestParam(value="productName") String productName) {
 

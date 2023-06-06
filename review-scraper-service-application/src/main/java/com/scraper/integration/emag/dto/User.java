@@ -1,5 +1,8 @@
-package com.scraper.integration.emag.dto.list;
+package com.scraper.integration.emag.dto;
 
+import lombok.Data;
+
+@Data
 public class User{
     public int id;
     public String hash;

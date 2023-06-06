@@ -1,4 +1,4 @@
-package com.scraper.integration.emag.dto.list;
+package com.scraper.integration.emag.dto;
 
 public class Discount{
     public String type;

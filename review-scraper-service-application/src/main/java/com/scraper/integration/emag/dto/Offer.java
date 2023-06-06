@@ -1,4 +1,4 @@
-package com.scraper.integration.emag.dto.list;
+package com.scraper.integration.emag.dto;
 
 public class Offer{
     public int id;

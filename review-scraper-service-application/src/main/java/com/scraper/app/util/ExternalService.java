@@ -1,4 +1,4 @@
-package com.scraper.integration.emag.util;
+package com.scraper.app.util;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;

@@ -1,8 +1,11 @@
-package com.scraper.integration.emag.dto.list;
+package com.scraper.integration.emag.dto;
+
+import lombok.Data;
 
 import java.util.ArrayList;
 import java.util.Date;
 
+@Data
 public class Item {
     public int rating;
     public boolean is_bought;
