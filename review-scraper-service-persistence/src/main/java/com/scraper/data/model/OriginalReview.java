@@ -22,10 +22,10 @@ public class OriginalReview {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "review_external_id")
+    @Column(name = "review_external_id", unique = true)
     private long reviewExternalId;
 
-    @Column(name = "part_id")
+    @Column(name = "part_id", unique = true)
     private String partId;
 
     @Column(name = "review", length = 2048)

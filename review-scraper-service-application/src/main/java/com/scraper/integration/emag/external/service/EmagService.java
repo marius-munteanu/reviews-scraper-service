@@ -3,8 +3,6 @@ package com.scraper.integration.emag.external.service;
 import com.scraper.integration.emag.dto.ExternalReviewsData;
 import com.scraper.app.util.ExternalService;
 import com.scraper.integration.emag.dto.Item;
-import com.scraper.integration.emag.dto.review.OriginalReviewDto;
-import com.scraper.integration.emag.dto.review.OriginalReviewerDto;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -15,12 +13,10 @@ import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
-import java.time.LocalDateTime;
-import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 @Service
 @Slf4j
@@ -45,13 +41,47 @@ public class EmagService extends ExternalService {
                 .exchange(getExternalUriBuilder(FEEDBACK_REVIEW_LIST)
                                 .queryParam("page[limit]", PAGE_LIMIT)
                                 .queryParam("page[offset]", offset)
+                                .queryParam("sort[created]", "desc")
                                 .buildAndExpand(productName, pdId)
                                 .toUri(),
                         HttpMethod.GET, httpEntity, ExternalReviewsData.class)
                 .getBody();
     }
 
-    public ExternalReviewsData getAggregatedReviews(String pdId, String productName) {
+    public ExternalReviewsData getLatestAgragatedReviews(String pdId, String productName, long latestOriginalReviewId) {
+        ExternalReviewsData externalReviewsData = new ExternalReviewsData();
+        ArrayList<Item> items = new ArrayList<>();
+        int offset = 0;
+        boolean hasNextPage = true;
+
+        while (hasNextPage) {
+            externalReviewsData = getExternalReviewData(pdId, productName, offset);
+            if (externalReviewsData.getExternalProductReviewsData() != null) {
+                var reviewItems = externalReviewsData.getExternalProductReviewsData().getItems();
+                var index = IntStream.range(0, reviewItems.size())
+                        .filter(i -> reviewItems.get(i).getId() == latestOriginalReviewId)
+                        .findFirst()
+                        .orElse(-1);
+
+                // If list is empty and index 0 means that no new reviews
+                if (items.isEmpty() && index == 0) {
+                    return new ExternalReviewsData();
+                } else if (index == -1) {
+                    items.addAll(reviewItems);
+                    offset += PAGE_LIMIT;
+                    hasNextPage = reviewItems.size() == PAGE_LIMIT;
+                } else {
+                    items.addAll(reviewItems.stream().limit(index).toList());
+                    hasNextPage = false;
+                }
+            }
+        }
+        externalReviewsData.getExternalProductReviewsData().setItems(items);
+
+        return externalReviewsData;
+    }
+
+    public ExternalReviewsData getAggreegatedReviews(String pdId, String productName) {
         ExternalReviewsData externalReviewsData = new ExternalReviewsData();
         ArrayList<Item> items = new ArrayList<>();
         int offset = 0;

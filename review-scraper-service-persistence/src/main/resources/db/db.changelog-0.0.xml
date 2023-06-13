@@ -9,7 +9,7 @@
                 <constraints primaryKey="true" primaryKeyName="original_reviewPK"/>
             </column>
             <column name="review_external_id" type="BIGINT">
-                <constraints nullable="false"/>
+                <constraints nullable="false" unique="true" uniqueConstraintName="review_external_id_unq"/>
             </column>
             <column name="part_id" type="TEXT">
                 <constraints nullable="false"/>

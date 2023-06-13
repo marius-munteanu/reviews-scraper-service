@@ -2,6 +2,7 @@ package com.scraper.app.service;
 
 import com.scraper.app.dto.ExternalReviewsDTO;
 import com.scraper.data.model.OriginalReview;
+import com.scraper.integration.emag.dto.ExternalProductReviewsData;
 import com.scraper.integration.emag.dto.Item;
 import com.scraper.integration.emag.dto.review.OriginalReviewDto;
 import com.scraper.integration.emag.dto.review.OriginalReviewerDto;
@@ -15,6 +16,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.util.List;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -25,17 +27,59 @@ public class ReviewScraperService {
     private final EmagService emagService;
     private final OriginalReviewDao originalReviewDao;
     public ResponseEntity<ExternalReviewsDTO> scrapeProductReviews(String pdId, String productName) {
-        var originalReviews = emagService.getAggregatedReviews(pdId, productName).getExternalProductReviewsData().getItems().stream()
-                .map(this::buildOriginalReview)
-                .toList();
+        log.info("Scrape product review {}", pdId);
+        var reviewItems = new ExternalProductReviewsData();
+        var latestOriginalReview = originalReviewDao.findTop1ByPartIdOrderByCreatedOnDesc(pdId);
+
+        if (latestOriginalReview.isPresent()) {
+            reviewItems = emagService.getLatestAgragatedReviews(pdId, productName, latestOriginalReview.get().getReviewExternalId()).getExternalProductReviewsData();
+        } else  {
+            reviewItems = emagService.getAggreegatedReviews(pdId, productName).getExternalProductReviewsData();
+        }
+
+        return saveProductReviews(pdId, reviewItems);
+    }
+
+    public ResponseEntity<ExternalReviewsDTO> updateProductReviews(String pdId, List<OriginalReviewDto> originalReviewDtoList) {
+        log.info("Update product review {} number of new items {}", pdId, originalReviewDtoList.size());
 
         OriginalReviewsDto originalReviewsDto = OriginalReviewsDto.builder()
-                .originalReviewDtos(originalReviews)
+                .originalReviewDtos(originalReviewDtoList)
                 .pdId(pdId)
-                .numberOfReviews(originalReviews.size())
+                .numberOfReviews(originalReviewDtoList.size())
                 .build();
 
-        return ResponseEntity.ok(saveReviews(originalReviewsDto));
+        var listReviews = originalReviewsDto.getOriginalReviewDtos().stream()
+                .map(review -> createOriginalReviewEntry(review, originalReviewsDto.getPdId())).toList();
+
+        var originalRating = getOriginalRating(listReviews);
+        var revisedRating = getRevisedRating(listReviews);
+
+        return ResponseEntity.ok(new ExternalReviewsDTO(originalRating, revisedRating, originalReviewsDto.getPdId(), originalReviewsDto.getNumberOfReviews()));
+    }
+
+    public ResponseEntity<ExternalReviewsDTO> saveProductReviews(String pdId, ExternalProductReviewsData externalProductReviewsData) {
+        if (externalProductReviewsData == null || externalProductReviewsData.getItems() == null) {
+            log.info("No reviews were found");
+        } else {
+            var originalReviews = externalProductReviewsData.getItems();
+
+            log.info("Save product review {} number of new items {}", pdId, originalReviews.size());
+
+            var originalReviewsDtoList = originalReviews.stream()
+                    .map(this::buildOriginalReview)
+                    .toList();
+
+            OriginalReviewsDto originalReviewsDto = OriginalReviewsDto.builder()
+                    .originalReviewDtos(originalReviewsDtoList)
+                    .pdId(pdId)
+                    .numberOfReviews(originalReviews.size())
+                    .build();
+
+            return ResponseEntity.ok(saveReviews(originalReviewsDto));
+        }
+
+        return ResponseEntity.notFound().build();
     }
 
     private ExternalReviewsDTO saveReviews(OriginalReviewsDto originalReviewsDto) {
@@ -43,14 +87,23 @@ public class ReviewScraperService {
                 .map(review -> createOriginalReviewEntry(review, originalReviewsDto.getPdId())).toList();
 
         var listReviews = originalReviewDao.saveAll(reviews);
-        var originalRating = listReviews.stream()
+        log.info("listReviews.stream() enter");
+        var originalRating = getOriginalRating(listReviews);
+        var revisedRating = getRevisedRating(listReviews);
+        log.info("listReviews.stream() exit");
+
+        return new ExternalReviewsDTO(originalRating, revisedRating, originalReviewsDto.getPdId(), originalReviewsDto.getNumberOfReviews());
+    }
+
+    private double getOriginalRating(List<OriginalReview> listReviews) {
+        return listReviews.stream()
                 .mapToInt(OriginalReview::getRating)
                 .average()
                 .orElse(0.0);
+    }
 
-        var revisedRating = 0.0;
-
-        return new ExternalReviewsDTO(originalRating, revisedRating, originalReviewsDto.getPdId(), originalReviewsDto.getNumberOfReviews());
+    private double getRevisedRating(List<OriginalReview> listReviews) {
+        return 0.0;
     }
 
     private OriginalReview createOriginalReviewEntry(OriginalReviewDto review, String pdId) {

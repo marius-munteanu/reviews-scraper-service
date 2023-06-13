@@ -4,9 +4,9 @@ import lombok.Data;
 
 @Data
 public class User{
-    public int id;
-    public String hash;
-    public String name;
-    public String nickname;
-    public boolean is_official;
+    private int id;
+    private String hash;
+    private String name;
+    private String nickname;
+    private boolean is_official;
 }

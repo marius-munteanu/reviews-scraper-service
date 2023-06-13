@@ -13,7 +13,7 @@ public class ExternalProductReviewsData {
 //    @JsonProperty("count")
 //    public int count;
 //    public FirstItem first_item;
-    public ArrayList<Item> items = new ArrayList<>();
+    private ArrayList<Item> items = new ArrayList<>();
 //    public RatingDistribution rating_distribution;
 //    public int positive_rating_percentage;
 //    public int bought_count;
