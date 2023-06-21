@@ -1,5 +1,6 @@
 package com.scraper.integration.emag.dto;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
 
 import java.util.ArrayList;
@@ -8,9 +9,11 @@ import java.util.Date;
 @Data
 public class Item {
     private int rating;
+    @JsonProperty("is_bought")
     private boolean is_bought;
     private int votes;
     private ArrayList<Comment> comments = new ArrayList<>();
+    @JsonProperty("current_customer_has_voted")
     private boolean current_customer_has_voted;
     private int brand_id;
     private int category_id;
@@ -25,6 +28,7 @@ public class Item {
     private long id;
     private String content;
     private User user;
+    @JsonProperty("is_active")
     private boolean is_active;
     private String moderation_status;
     private Date created;

@@ -1,6 +1,6 @@
 package com.scraper.app.controller;
 
-import com.scraper.app.dto.ExternalReviewsDTO;
+import com.scraper.app.dto.ExternalReviewData;
 import com.scraper.integration.emag.dto.ExternalReviewsData;
 import com.scraper.app.service.ReviewScraperService;
 import lombok.RequiredArgsConstructor;
@@ -18,7 +18,7 @@ public class ReviewScraperController {
 
     @GetMapping(path = "/scrape")
     @ResponseStatus(CREATED)
-    public ResponseEntity<ExternalReviewsDTO> scrapeReviews(
+    public ResponseEntity<ExternalReviewData> scrapeReviews(
             @RequestParam(value="pdId") String pdId,
             @RequestParam(value="productName") String productName) {
 

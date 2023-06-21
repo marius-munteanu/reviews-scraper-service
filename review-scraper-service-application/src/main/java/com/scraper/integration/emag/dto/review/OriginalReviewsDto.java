@@ -10,5 +10,4 @@ import java.util.List;
 public class OriginalReviewsDto {
     private List<OriginalReviewDto> originalReviewDtos;
     private String pdId;
-    private int numberOfReviews;
 }

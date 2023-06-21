@@ -1,6 +1,9 @@
 package com.scraper.app.service;
 
-import com.scraper.app.dto.ExternalReviewsDTO;
+import com.scraper.app.dto.ExternalReviewData;
+import com.scraper.app.dto.OriginalRatingDto;
+import com.scraper.app.dto.RevisedRatingDto;
+import com.scraper.app.rating.RevisedRatingService;
 import com.scraper.data.model.OriginalReview;
 import com.scraper.integration.emag.dto.ExternalProductReviewsData;
 import com.scraper.integration.emag.dto.Item;
@@ -14,6 +17,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.List;
@@ -25,8 +30,9 @@ import java.util.stream.Collectors;
 public class ReviewScraperService {
 
     private final EmagService emagService;
+    private final RevisedRatingService revisedRatingService;
     private final OriginalReviewDao originalReviewDao;
-    public ResponseEntity<ExternalReviewsDTO> scrapeProductReviews(String pdId, String productName) {
+    public ResponseEntity<ExternalReviewData> scrapeProductReviews(String pdId, String productName) {
         log.info("Scrape product review {}", pdId);
         var reviewItems = new ExternalProductReviewsData();
         var latestOriginalReview = originalReviewDao.findTop1ByPartIdOrderByCreatedOnDesc(pdId);
@@ -40,27 +46,10 @@ public class ReviewScraperService {
         return saveProductReviews(pdId, reviewItems);
     }
 
-    public ResponseEntity<ExternalReviewsDTO> updateProductReviews(String pdId, List<OriginalReviewDto> originalReviewDtoList) {
-        log.info("Update product review {} number of new items {}", pdId, originalReviewDtoList.size());
-
-        OriginalReviewsDto originalReviewsDto = OriginalReviewsDto.builder()
-                .originalReviewDtos(originalReviewDtoList)
-                .pdId(pdId)
-                .numberOfReviews(originalReviewDtoList.size())
-                .build();
-
-        var listReviews = originalReviewsDto.getOriginalReviewDtos().stream()
-                .map(review -> createOriginalReviewEntry(review, originalReviewsDto.getPdId())).toList();
-
-        var originalRating = getOriginalRating(listReviews);
-        var revisedRating = getRevisedRating(listReviews);
-
-        return ResponseEntity.ok(new ExternalReviewsDTO(originalRating, revisedRating, originalReviewsDto.getPdId(), originalReviewsDto.getNumberOfReviews()));
-    }
-
-    public ResponseEntity<ExternalReviewsDTO> saveProductReviews(String pdId, ExternalProductReviewsData externalProductReviewsData) {
+    public ResponseEntity<ExternalReviewData> saveProductReviews(String pdId, ExternalProductReviewsData externalProductReviewsData) {
         if (externalProductReviewsData == null || externalProductReviewsData.getItems() == null) {
             log.info("No reviews were found");
+            return ResponseEntity.ok().build();
         } else {
             var originalReviews = externalProductReviewsData.getItems();
 
@@ -73,37 +62,43 @@ public class ReviewScraperService {
             OriginalReviewsDto originalReviewsDto = OriginalReviewsDto.builder()
                     .originalReviewDtos(originalReviewsDtoList)
                     .pdId(pdId)
-                    .numberOfReviews(originalReviews.size())
                     .build();
 
             return ResponseEntity.ok(saveReviews(originalReviewsDto));
         }
-
-        return ResponseEntity.notFound().build();
     }
 
-    private ExternalReviewsDTO saveReviews(OriginalReviewsDto originalReviewsDto) {
+    private ExternalReviewData saveReviews(OriginalReviewsDto originalReviewsDto) {
         var reviews = originalReviewsDto.getOriginalReviewDtos().stream()
                 .map(review -> createOriginalReviewEntry(review, originalReviewsDto.getPdId())).toList();
 
-        var listReviews = originalReviewDao.saveAll(reviews);
         log.info("listReviews.stream() enter");
-        var originalRating = getOriginalRating(listReviews);
-        var revisedRating = getRevisedRating(listReviews);
+        var originalRating = getOriginalRating(reviews);
+        var revisedRating = getRevisedRating(reviews);
         log.info("listReviews.stream() exit");
 
-        return new ExternalReviewsDTO(originalRating, revisedRating, originalReviewsDto.getPdId(), originalReviewsDto.getNumberOfReviews());
+        originalReviewDao.saveAll(reviews);
+
+        return ExternalReviewData.builder()
+                .originalRatingDto(originalRating)
+                .revisedRatingDto(revisedRating)
+                .pdId(originalReviewsDto.getPdId())
+                .build();
     }
 
-    private double getOriginalRating(List<OriginalReview> listReviews) {
-        return listReviews.stream()
-                .mapToInt(OriginalReview::getRating)
-                .average()
-                .orElse(0.0);
+    private OriginalRatingDto getOriginalRating(List<OriginalReview> listReviews) {
+        return OriginalRatingDto.builder()
+                .totalReviews(listReviews.size())
+                .originalRating(BigDecimal.valueOf(listReviews.stream()
+                                .mapToInt(OriginalReview::getRating)
+                                .average()
+                                .orElse(0.00))
+                        .setScale(3, RoundingMode.CEILING))
+                .build();
     }
 
-    private double getRevisedRating(List<OriginalReview> listReviews) {
-        return 0.0;
+    private RevisedRatingDto getRevisedRating(List<OriginalReview> originalReviews) {
+        return revisedRatingService.getRevisedRatingForReviews(originalReviews);
     }
 
     private OriginalReview createOriginalReviewEntry(OriginalReviewDto review, String pdId) {
@@ -125,6 +120,7 @@ public class ReviewScraperService {
                 .title(reviewItem.getTitle())
                 .content(reviewItem.getContent())
                 .rating(reviewItem.getRating())
+                .isVerifiedPurchase(reviewItem.is_bought())
                 .reviewId(reviewItem.getId())
                 .numberOfVotes(reviewItem.getVotes())
                 .createdOn(LocalDateTime.ofInstant(reviewItem.getCreated().toInstant(), ZoneId.systemDefault()))
