@@ -39,6 +39,7 @@ public class EmagService extends ExternalService {
         log.info("get reviews for {} offset {}", productName, offset);
         return getRestTemplate()
                 .exchange(getExternalUriBuilder(FEEDBACK_REVIEW_LIST)
+                                .queryParam("source_id", "7")
                                 .queryParam("page[limit]", PAGE_LIMIT)
                                 .queryParam("page[offset]", offset)
                                 .queryParam("sort[created]", "desc")
@@ -48,7 +49,7 @@ public class EmagService extends ExternalService {
                 .getBody();
     }
 
-    public ExternalReviewsData getLatestAgragatedReviews(String pdId, String productName, long latestOriginalReviewId) {
+    public ExternalReviewsData getLatestAggregatedReviews(String pdId, String productName, long latestOriginalReviewId) {
         ExternalReviewsData externalReviewsData = new ExternalReviewsData();
         ArrayList<Item> items = new ArrayList<>();
         int offset = 0;
@@ -81,7 +82,7 @@ public class EmagService extends ExternalService {
         return externalReviewsData;
     }
 
-    public ExternalReviewsData getAggreegatedReviews(String pdId, String productName) {
+    public ExternalReviewsData getAggregatedReviews(String pdId, String productName) {
         ExternalReviewsData externalReviewsData = new ExternalReviewsData();
         ArrayList<Item> items = new ArrayList<>();
         int offset = 0;

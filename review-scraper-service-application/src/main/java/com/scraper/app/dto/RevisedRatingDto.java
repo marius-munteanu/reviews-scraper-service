@@ -13,6 +13,6 @@ public class RevisedRatingDto {
     private int remainingReviews;
     private BigDecimal revisedRating;
     private int unverifiedReviews;
-    private SimilarReviewsDto similarReviews;
+    private ReviewsMetaInfo reviewsMetaInfo;
     private Map<String, Integer> reviewsCreatedOnTheSameDay;
 }
